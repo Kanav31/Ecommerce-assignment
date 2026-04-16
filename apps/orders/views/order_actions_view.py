@@ -1,15 +1,13 @@
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers as drf_serializers
-
 from apps.accounts.permissions import IsAdmin, IsDeliveryMan
+from apps.orders.constants import OrderMessage
 from apps.orders.serializers import OrderResponseSerializer
 from apps.orders.services import OrderService
-
+from core.response import success_response
 
 class AssignDeliveryView(APIView):
     """
@@ -17,7 +15,6 @@ class AssignDeliveryView(APIView):
     Admin only — assigns delivery man, sets status → assigned.
     """
     permission_classes = [IsAuthenticated, IsAdmin]
-
     @extend_schema(
         request=inline_serializer(
             name='AssignDeliveryRequest',
@@ -30,14 +27,16 @@ class AssignDeliveryView(APIView):
     def post(self, request, order_id):
         delivery_man_id = request.data.get('delivery_man_id')
         if not delivery_man_id:
-            raise ValidationError('delivery_man_id is required.')
+            raise ValidationError(OrderMessage.DELIVERY_MAN_ID_REQUIRED)
 
         order = OrderService.assign_delivery(
             order_id=order_id,
             delivery_man_id=delivery_man_id,
         )
-        return Response(OrderResponseSerializer(order).data, status=status.HTTP_200_OK)
-
+        return success_response(
+            message = OrderMessage.DELIVERY_ASSIGNED,
+            data = OrderResponseSerializer(order).data,
+        )
 
 class UpdateStatusView(APIView):
     """
@@ -45,7 +44,6 @@ class UpdateStatusView(APIView):
     Delivery man only — marks assigned order as delivered.
     """
     permission_classes = [IsAuthenticated, IsDeliveryMan]
-
     @extend_schema(
         request=None,
         responses={200: OrderResponseSerializer},
@@ -54,4 +52,7 @@ class UpdateStatusView(APIView):
     )
     def patch(self, request, order_id):
         order = OrderService.update_status(order_id=order_id, user=request.user)
-        return Response(OrderResponseSerializer(order).data, status=status.HTTP_200_OK)
+        return success_response(
+            message = OrderMessage.ORDER_DELIVERED,
+            data = OrderResponseSerializer(order).data,
+        )

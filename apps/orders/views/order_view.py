@@ -1,21 +1,18 @@
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 from drf_spectacular.utils import extend_schema
-
 from apps.accounts.permissions import IsCustomer
+from apps.orders.constants import OrderMessage
 from apps.orders.serializers import OrderRequestSerializer, OrderResponseSerializer
 from apps.orders.services import OrderService
 from core.pagination import CustomPageNumberPagination
-
+from core.response import success_response
 
 class OrderListCreateView(APIView):
     """
     GET  /api/orders/ — All authenticated users (role-scoped)
     POST /api/orders/ — Customer only
     """
-
     def get_permissions(self):
         if self.request.method == 'POST':
             return [IsAuthenticated(), IsCustomer()]
@@ -27,9 +24,9 @@ class OrderListCreateView(APIView):
         summary='List orders (role-scoped: admin=all, customer=own, delivery=assigned)',
     )
     def get(self, request):
-        orders    = OrderService.get_orders_for_user(request.user)
+        orders = OrderService.get_orders_for_user(request.user)
         paginator = CustomPageNumberPagination()
-        page      = paginator.paginate_queryset(orders, request, view=self)
+        page = paginator.paginate_queryset(orders, request, view=self)
         serializer = OrderResponseSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
@@ -46,4 +43,8 @@ class OrderListCreateView(APIView):
             user=request.user,
             validated_data=serializer.validated_data,
         )
-        return Response(OrderResponseSerializer(order).data, status=status.HTTP_201_CREATED)
+        return success_response(
+            message = OrderMessage.ORDER_CREATED,
+            status_code = 201,
+            data = OrderResponseSerializer(order).data,
+        )

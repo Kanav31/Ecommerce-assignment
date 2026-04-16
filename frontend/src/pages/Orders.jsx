@@ -25,7 +25,7 @@ export default function Orders() {
   const fetchDeliveryUsers = async () => {
     try {
       const res = await api.get('/auth/delivery-users/');
-      setDeliveryUsers(res.data);
+      setDeliveryUsers(res.data.data);
     } catch {
       setError('Failed to load delivery users');
     }

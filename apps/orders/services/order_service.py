@@ -1,31 +1,24 @@
 from django.db import transaction
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-
 from apps.accounts.constants import Role
-from apps.orders.constants import Status
+from apps.orders.constants import OrderMessage, Status
 from apps.orders.models import Order, OrderItem
 from apps.products.models import Product
 
-
 class OrderService:
-
     @staticmethod
     @transaction.atomic
     def create_order(user, validated_data: dict) -> Order:
         order = Order.objects.create(customer=user)
-
         order_items = [
             OrderItem(
-                order      = order,
+                order = order,
                 product_id = item['product_id'],
-                quantity   = item['quantity'],
+                quantity = item['quantity'],
             )
             for item in validated_data['items']
         ]
-
-        # bulk_create inserts all items in one query instead of one per item
         OrderItem.objects.bulk_create(order_items)
-
         return Order.objects.select_related(
             'customer', 'assigned_delivery_man'
         ).prefetch_related('items__product').get(id=order.id)
@@ -47,25 +40,23 @@ class OrderService:
 
     @staticmethod
     def assign_delivery(order_id: int, delivery_man_id: int) -> Order:
-        from apps.accounts.models import User  # local import avoids circular
-
+        from apps.accounts.models import User
         try:
             order = Order.objects.select_related(
                 'customer', 'assigned_delivery_man'
             ).prefetch_related('items__product').get(id=order_id)
         except Order.DoesNotExist:
-            raise NotFound(f'Order with id {order_id} not found.')
-
+            raise NotFound(OrderMessage.ORDER_NOT_FOUND.format(order_id=order_id))
         try:
             delivery_man = User.objects.get(id=delivery_man_id, role=Role.DELIVERY)
         except User.DoesNotExist:
-            raise ValidationError('Delivery man not found or user is not a delivery man.')
+            raise NotFound(OrderMessage.DELIVERY_MAN_NOT_FOUND)
 
         if order.status == Status.DELIVERED:
-            raise ValidationError('Cannot assign a delivery man to an already delivered order.')
+            raise ValidationError(OrderMessage.ALREADY_DELIVERED)
 
         order.assigned_delivery_man = delivery_man
-        order.status                = Status.ASSIGNED
+        order.status = Status.ASSIGNED
         order.save(update_fields=['assigned_delivery_man', 'status'])
 
         return order
@@ -77,16 +68,15 @@ class OrderService:
                 'customer', 'assigned_delivery_man'
             ).prefetch_related('items__product').get(id=order_id)
         except Order.DoesNotExist:
-            raise NotFound(f'Order with id {order_id} not found.')
+            raise NotFound(OrderMessage.ORDER_NOT_FOUND.format(order_id=order_id))
 
         if order.assigned_delivery_man_id != user.id:
-            raise PermissionDenied('You are not assigned to this order.')
+            raise PermissionDenied(OrderMessage.NOT_ASSIGNED_TO_ORDER)
 
         if order.status != Status.ASSIGNED:
             raise ValidationError(
-                f'Order cannot be marked as delivered. Current status: {order.status}'
+                OrderMessage.INVALID_STATUS_TRANSITION.format(status=order.status)
             )
-
         order.status = Status.DELIVERED
         order.save(update_fields=['status'])
 

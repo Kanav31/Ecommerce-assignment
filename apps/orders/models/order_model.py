@@ -1,14 +1,8 @@
 from django.db import models
 from django.conf import settings
-
 from apps.orders.constants import Status
 
-
 class Order(models.Model):
-    """
-    status lifecycle: pending → assigned → delivered
-    PROTECT on both FKs — prevents deleting users who have order history.
-    """
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -21,9 +15,9 @@ class Order(models.Model):
         null=True,
         blank=True,
     )
-    status     = models.CharField(
+    status = models.CharField(
         max_length=10,
-        choices=Status.CHOICES,
+        choices=Status.choices,
         default=Status.PENDING,
     )
     created_at = models.DateTimeField(auto_now_add=True)

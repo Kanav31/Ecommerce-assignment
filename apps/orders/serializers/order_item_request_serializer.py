@@ -1,7 +1,6 @@
 from rest_framework import serializers
-
+from apps.orders.constants import OrderItemMessage
 from apps.products.models import Product
-
 
 class OrderItemRequestSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
@@ -9,5 +8,7 @@ class OrderItemRequestSerializer(serializers.Serializer):
 
     def validate_product_id(self, value):
         if not Product.objects.filter(id=value).exists():
-            raise serializers.ValidationError(f'Product with id {value} does not exist.')
+            raise serializers.ValidationError(
+                OrderItemMessage.PRODUCT_NOT_FOUND.format(product_id=value)
+            )
         return value

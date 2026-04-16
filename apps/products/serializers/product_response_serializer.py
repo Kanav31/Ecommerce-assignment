@@ -1,7 +1,5 @@
 from rest_framework import serializers
-
 from apps.products.models import Product
-
 
 class ProductResponseSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()

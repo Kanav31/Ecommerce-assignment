@@ -74,35 +74,23 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'apps.accounts.authentication.CookieJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'EXCEPTION_HANDLER': 'core.exceptions.global_exception_handler',
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER':        'core.exceptions.global_exception_handler',
+    'DEFAULT_SCHEMA_CLASS':     'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE':                10,
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME':    timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME':   timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS':    True,
-    'BLACKLIST_AFTER_ROTATION': False,
-    'ALGORITHM':                'HS256',
-    'SIGNING_KEY':              env('SECRET_KEY'),
+    'ACCESS_TOKEN_LIFETIME':  timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ALGORITHM':              'HS256',
 }
 
-JWT_COOKIE_SETTINGS = {
-    'ACCESS_COOKIE_NAME':  'access_token',
-    'REFRESH_COOKIE_NAME': 'refresh_token',
-    'ACCESS_MAX_AGE':      60 * 15,
-    'REFRESH_MAX_AGE':     60 * 60 * 24 * 7,
-    'HTTP_ONLY':           True,
-    'SAMESITE':            'Lax',
-    'SECURE':              not DEBUG,  # False in dev, True in production
-}
 
 CACHES = {
     'default': {
@@ -117,15 +105,24 @@ CACHES = {
 
 PRODUCT_CACHE_TTL = 60 * 60  # 1 hour
 
-# CORS_ALLOW_CREDENTIALS required for axios withCredentials to send cookies cross-origin
-CORS_ALLOWED_ORIGINS   = env.list('CORS_ALLOWED_ORIGINS', default=['http://localhost:5173'])
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=['http://localhost:5173'])
 
 SPECTACULAR_SETTINGS = {
     'TITLE':                'Order Management API',
     'DESCRIPTION':          'Django REST Framework order management system',
     'VERSION':              '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    # Enables the Authorize button in Swagger UI — paste the access_token from /auth/login/
+    'SECURITY': [{'BearerAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type':         'http',
+                'scheme':       'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
 }
 
 LANGUAGE_CODE = 'en-us'

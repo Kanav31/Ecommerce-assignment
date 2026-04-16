@@ -1,5 +1,4 @@
 from django.urls import path
-
 from apps.orders.views import OrderListCreateView, AssignDeliveryView, UpdateStatusView
 
 urlpatterns = [

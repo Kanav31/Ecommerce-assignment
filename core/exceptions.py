@@ -1,21 +1,21 @@
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 from rest_framework import status
-
+from core.constants import ErrorMessage
 
 def global_exception_handler(exc, context):
-    """Normalises all errors to { error: true, message: '...' }"""
     response = exception_handler(exc, context)
 
     if response is not None:
         response.data = {
-            'error':   True,
+            'success': False,
+            'status_code': response.status_code,
             'message': _extract_message(response.data),
         }
         return response
 
     return Response(
-        {'error': True, 'message': 'An unexpected error occurred.'},
+        {'success': False, 'status_code': 500, 'message': ErrorMessage.UNEXPECTED_ERROR},
         status=status.HTTP_500_INTERNAL_SERVER_ERROR
     )
 

@@ -1,7 +1,5 @@
 from rest_framework import serializers
-
 from apps.orders.models import Order, OrderItem
-
 
 class OrderItemResponseSerializer(serializers.ModelSerializer):
     product_name  = serializers.CharField(source='product.name', read_only=True)
@@ -13,14 +11,14 @@ class OrderItemResponseSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model        = OrderItem
-        fields       = ['id', 'product_id', 'product_name', 'product_price', 'quantity']
+        model = OrderItem
+        fields = ['id', 'product_id', 'product_name', 'product_price', 'quantity']
         read_only_fields = fields
 
 
 class OrderResponseSerializer(serializers.ModelSerializer):
-    items             = OrderItemResponseSerializer(many=True, read_only=True)
-    customer_name     = serializers.CharField(source='customer.name', read_only=True)
+    items = OrderItemResponseSerializer(many=True, read_only=True)
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
     delivery_man_name = serializers.SerializerMethodField()
 
     class Meta:
