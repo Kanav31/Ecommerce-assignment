@@ -102,14 +102,27 @@ class RefreshTokenView(APIView):
 
         try:
             refresh = RefreshToken(raw_refresh)
+            new_access = str(refresh.access_token)
+            # Rotate: generate a new refresh token (new JTI + expiry)
+            refresh.set_jti()
+            refresh.set_exp()
+            new_refresh = str(refresh)
         except TokenError:
             raise AuthenticationFailed('Refresh token is invalid or expired.')
 
         response = Response({'message': 'Token refreshed.'}, status=status.HTTP_200_OK)
         response.set_cookie(
             key      = cookie_settings['ACCESS_COOKIE_NAME'],
-            value    = str(refresh.access_token),
+            value    = new_access,
             max_age  = cookie_settings['ACCESS_MAX_AGE'],
+            httponly = cookie_settings['HTTP_ONLY'],
+            samesite = cookie_settings['SAMESITE'],
+            secure   = cookie_settings['SECURE'],
+        )
+        response.set_cookie(
+            key      = cookie_settings['REFRESH_COOKIE_NAME'],
+            value    = new_refresh,
+            max_age  = cookie_settings['REFRESH_MAX_AGE'],
             httponly = cookie_settings['HTTP_ONLY'],
             samesite = cookie_settings['SAMESITE'],
             secure   = cookie_settings['SECURE'],

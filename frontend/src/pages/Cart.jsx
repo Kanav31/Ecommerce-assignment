@@ -19,6 +19,7 @@ export default function Cart() {
       : cart.map(i => i.product_id === product_id ? { ...i, quantity: qty } : i);
     setCart(updated);
     localStorage.setItem('cart', JSON.stringify(updated));
+    window.dispatchEvent(new Event('cart-updated'));
   };
 
   const placeOrder = async () => {
@@ -30,6 +31,7 @@ export default function Cart() {
       });
       localStorage.removeItem('cart');
       setCart([]);
+      window.dispatchEvent(new Event('cart-updated'));
       setSuccess('Order placed successfully!');
       setTimeout(() => navigate('/orders'), 1500);
     } catch (err) {
