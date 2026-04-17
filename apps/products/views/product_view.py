@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.accounts.permissions import IsAdmin
 from apps.products.constants import ProductMessage
@@ -20,6 +21,10 @@ class ProductListCreateView(APIView):
         responses={200: ProductResponseSerializer(many=True)},
         tags=['Products'],
         summary='List all products (paginated)',
+        parameters=[
+            OpenApiParameter('limit', OpenApiTypes.INT, OpenApiParameter.QUERY, description='Number of results to return (max 100)'),
+            OpenApiParameter('offset', OpenApiTypes.INT, OpenApiParameter.QUERY, description='Number of results to skip'),
+        ],
     )
     def get(self, request):
         products = ProductService.list_products()

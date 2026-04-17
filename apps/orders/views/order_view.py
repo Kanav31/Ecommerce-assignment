@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from apps.accounts.permissions import IsCustomer
 from apps.orders.constants import OrderMessage
 from apps.orders.serializers import OrderRequestSerializer, OrderResponseSerializer
@@ -22,6 +23,10 @@ class OrderListCreateView(APIView):
         responses={200: OrderResponseSerializer(many=True)},
         tags=['Orders'],
         summary='List orders (role-scoped: admin=all, customer=own, delivery=assigned)',
+        parameters=[
+            OpenApiParameter('limit', OpenApiTypes.INT, OpenApiParameter.QUERY, description='Number of results to return (max 100)'),
+            OpenApiParameter('offset', OpenApiTypes.INT, OpenApiParameter.QUERY, description='Number of results to skip'),
+        ],
     )
     def get(self, request):
         orders = OrderService.get_orders_for_user(request.user)

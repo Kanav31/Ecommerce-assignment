@@ -12,7 +12,6 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-// Shared promise — if 3 requests 401 at once, they all wait on one refresh, not 3 separate ones.
 let refreshPromise = null;
 
 api.interceptors.response.use(
@@ -37,7 +36,7 @@ api.interceptors.response.use(
             .finally(() => { refreshPromise = null; });
         }
         await refreshPromise;
-        return api(original);   // retry original request with new token
+        return api(original); 
       } catch {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

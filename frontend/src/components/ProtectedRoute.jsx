@@ -1,11 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 
-/**
- * Usage:
- *   <ProtectedRoute>                    — any logged-in user
- *   <ProtectedRoute roles={['admin']}>  — specific roles only
- */
 export default function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
 
